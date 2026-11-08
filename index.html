@@ -156,7 +156,6 @@ input,textarea{font:inherit;color:var(--text)}
 .callout.yellow{background:var(--t-spec);border-left:3px solid var(--specific)}
 .c-h{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .callout.red .c-h{color:var(--race-col)}.callout.amber .c-h{color:var(--threshold-col)}.callout.green .c-h{color:var(--base)}
-.big999{font-family:var(--display);font-weight:900;font-size:1.25rem;color:var(--race-col);line-height:1.2;margin-top:8px}
 .prog-title{font-size:.76rem;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}
 .pace-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .pace-card{background:var(--card);border-radius:10px;padding:12px 14px}
@@ -266,7 +265,7 @@ textarea{width:100%;background:var(--card2);border:1px solid var(--border);borde
 <header class="app-header" id="hdr"></header>
 <nav class="tab-bar" id="tabs" aria-label="Sections"><div class="tab-inner">
   <button class="tab-btn active" data-act="tab" data-arg="week">Week</button>
-  <button class="tab-btn" data-act="tab" data-arg="safety">Staying safe</button>
+  <button class="tab-btn" data-act="tab" data-arg="safety">How it works</button>
   <button class="tab-btn" data-act="tab" data-arg="progress">Progress</button>
 </div></nav>
 <main class="panel" id="view"></main>
@@ -486,11 +485,10 @@ function renderWeek(){
 }
 
 function renderSafety(){
-  return '<div class="callout red"><div class="c-h">Stop straight away if you get</div><ul><li>a headache, especially one that comes on suddenly</li><li>dizziness, blurred or double vision</li><li>nausea, numbness, weakness or confusion</li></ul><p class="big999">A sudden, severe headache, or any of these that don’t settle: call 999.</p></div>'+
-  '<div class="n-card"><h3>Before every gym session</h3><ul><li>The app asks three quick checks first. Answer them honestly.</li><li><strong>Don’t train</strong> if you feel unwell or have a headache.</li><li>Skip pre-workout, energy drinks and strong coffee beforehand.</li><li>If your blood pressure is above your usual target, walk instead.</li></ul></div>'+
-  '<div class="n-card"><h3>During every set</h3><ul><li><strong>Breathe out as you lift, in as you lower.</strong> The breathing guide in each session keeps the rhythm for you.</li><li>Count your reps out loud: you can’t hold your breath while talking.</li><li>Effort <strong>3 to 4 out of 10</strong>. Finish every set with at least 5 reps left in the tank.</li><li>Rest 60 to 90 seconds between sets, and get up slowly after seated or lying exercises.</li></ul></div>'+
-  '<div class="callout amber"><div class="c-h">Never</div><ul><li>Heavy weights, maximum efforts or lifting to failure</li><li>Holding your breath or bracing hard</li><li>Anything overhead</li><li>Head-down positions: decline benches, inversions, downward dog, deep forward bends, handstands</li><li>HIIT, sprints, races or competitive classes</li><li>Contact sports</li></ul></div>'+
-  '<div class="callout green"><div class="c-h">How progress works</div><p>Start at 15 reps. Add a rep or two each session up to 20. Only once 20 reps feel easy, add the smallest weight step and drop back to 15. Anything you mark too hard goes one step lighter next time.</p></div>';
+  return '<div class="n-card"><h3>Each set</h3><ul><li><strong>Breathe out as you lift, in as you lower.</strong> The breathing guide in each session keeps the rhythm.</li><li>Counting reps out loud keeps the breathing flowing.</li><li>Effort <strong>3 to 4 out of 10</strong>, finishing each set with plenty left in the tank.</li><li>60 to 90 seconds’ rest between sets, and take your time getting up after seated or lying exercises.</li></ul></div>'+
+  '<div class="callout green"><div class="c-h">How progress works</div><p>Start at 15 reps. Add a rep or two each session up to 20. Once 20 reps feel easy, add the smallest weight step and drop back to 15. Anything you mark too hard goes one step lighter next time.</p></div>'+
+  '<div class="n-card"><h3>The weekly rhythm</h3><ul><li>Gym sessions alternate between A and B.</li><li>Walks are brisk but chatty, building from 20 to 30 minutes.</li><li>Any gym day can become a walk if that suits you better. There’s a button at the bottom of each session.</li></ul></div>'+
+  '<div class="n-card"><h3>What this plan keeps out</h3><p>Heavy lifting, overhead work, head-down positions and high-intensity intervals. Every swap option follows the same approach.</p></div>';
 }
 
 function renderProgress(){
@@ -529,7 +527,7 @@ function openDay(d){
   if(s.type==='walk'||S.walkSwap[d])cur.mode='walk';
   else if(S.done[d])cur.mode='summary';
   else if(d>today())cur.mode='preview';
-  else cur.mode='checkin';
+  else cur.mode='gym';
   draw();openSheet();
 }
 
@@ -547,25 +545,6 @@ function draw(){
       '<div class="wmins"><input id="wm" type="number" inputmode="numeric" min="1" max="240" value="'+(r&&r.mins?r.mins:p.walk)+'" aria-label="Minutes walked"><span>minutes walked</span></div>'+
       (r?'<button class="btn warn" data-act="undo">Mark as not done</button>':'<button class="btn walkb" data-act="walkdone">Mark done</button>')+
       (swapped&&!r?'<button class="btn sm" data-act="unswap">Back to the gym session</button>':'')+'</div>';
-  }
-  else if(cur.mode==='checkin'){
-    const q=(k,text,opts)=>'<div class="q"><p>'+text+'</p><div class="seg">'+opts.map(o=>'<button data-act="ci" data-arg="'+k+'|'+o[0]+'" aria-pressed="'+(cur.ci[k]===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>';
-    const all=cur.ci.well&&cur.ci.bp&&cur.ci.stim;
-    h+=head('Gym session '+s.which,meta,G,'Strength')+'<div class="sheet-body"><div class="prog-title" style="margin-top:0">Three quick checks</div>'+
-      q('well','Feeling well, with no headache?',[['yes','Yes'],['no','No']])+
-      q('bp','Blood pressure where it should be today?',[['yes','Yes'],['above','Higher'],['na','Not checked']])+
-      q('stim','Pre-workout, an energy drink or strong coffee in the last few hours?',[['no','No'],['yes','Yes']])+
-      '<button class="btn pri" data-act="cigo" '+(all?'':'disabled')+'>Continue</button></div>';
-  }
-  else if(cur.mode==='stop'){
-    h+=head('Not today',meta,'var(--race-col)','Rest')+'<div class="sheet-body">'+
-      '<div class="callout red"><p>Rest today rather than training. Feeling unwell or having a headache is a reason to skip, not push through.</p><p class="big999">If the headache came on suddenly or is severe, call 999 now.</p><p>For a milder headache that doesn’t settle, call NHS 111.</p></div>'+
-      '<button class="btn" data-act="close">Close</button></div>';
-  }
-  else if(cur.mode==='walkonly'){
-    h+=head('Walk only today',meta,B,'Walk')+'<div class="sheet-body">'+
-      '<div class="callout amber"><p>'+cur.why+' Keep it to an easy walk today and save the gym for your next session.</p></div>'+
-      '<button class="btn walkb" data-act="swapwalk">Swap to a walk</button><button class="btn" data-act="close">Close</button></div>';
   }
   else if(cur.mode==='gym'||cur.mode==='preview'){
     const live=cur.mode==='gym';
@@ -591,7 +570,7 @@ function draw(){
     });
     h+=step('c','c','Cardio','<strong>'+p.cardio+' min</strong> steady on the cross-trainer, bike or treadmill, at a pace where you can still chat.');
     h+=step('c','c','Cool down','<strong>5 min</strong> slow walk, then a few gentle stretches standing up.');
-    if(live)h+='<button class="btn pri" data-act="finish">Finish session</button>';
+    if(live)h+='<button class="btn pri" data-act="finish">Finish session</button><button class="btn sm" data-act="swapwalk">Swap to a walk today</button>';
     h+='</div>';
   }
   else if(cur.mode==='summary'){
@@ -639,16 +618,8 @@ const acts={
     if(d>today()){toast('You can tick this off on the day');return;}
     S.done[d]={at:Date.now(),mins:(s.type==='walk'||S.walkSwap[d])?phase(weekNo(d)).walk:0};save();render();toast('Marked done');
   },
-  ci(a,btn){const[k,v]=a.split('|');cur.ci[k]=v;btn.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===btn));const go=sh.querySelector('[data-act=cigo]');if(go)go.disabled=!(cur.ci.well&&cur.ci.bp&&cur.ci.stim);},
-  cigo(){
-    if(cur.ci.well==='no'){cur.mode='stop';}
-    else if(cur.ci.bp==='above'){cur.mode='walkonly';cur.why='Your blood pressure is above your target.';}
-    else if(cur.ci.stim==='yes'){cur.mode='walkonly';cur.why='Stimulants push blood pressure up for a few hours.';}
-    else cur.mode='gym';
-    draw();sh.scrollTop=0;
-  },
   swapwalk(){S.walkSwap[cur.d]=true;save();cur.mode='walk';draw();},
-  unswap(){delete S.walkSwap[cur.d];save();cur.mode=cur.d>today()?'preview':'checkin';cur.ci={};draw();},
+  unswap(){delete S.walkSwap[cur.d];save();cur.mode=cur.d>today()?'preview':'gym';draw();},
   walkdone(){const m=parseInt(document.getElementById('wm').value,10);S.done[cur.d]={at:Date.now(),mins:m>0?m:phase(weekNo(cur.d)).walk};save();toast('Walk saved');closeSheet();},
   undo(){const d=cur.d;delete S.done[d];Object.keys(S.logs).forEach(k=>{S.logs[k]=S.logs[k].filter(x=>x.d!==d);});save();toast('Marked as not done');closeSheet();},
   feel(a,btn){const[id,v]=a.split('|');cur.draft[id].f=v;btn.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===btn));},
