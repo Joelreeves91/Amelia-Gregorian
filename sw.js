@@ -1,4 +1,4 @@
-const CACHE = 'plan-amelia-strength-2026-q7m2x-52144c43f8';
+const CACHE = 'plan-amelia-strength-2026-q7m2x-b5ab452152';
 const PRECACHE = ['/', '/manifest.json', '/icon-192.png', '/icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(PRECACHE).catch(()=>{})).then(()=>self.skipWaiting()));
