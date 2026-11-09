@@ -211,6 +211,8 @@ input,textarea{font:inherit;color:var(--text)}
 .logs input{width:72px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 6px;text-align:center;font-size:1rem}
 .logs input.kg{width:80px;border-color:var(--strength-col)}
 .feelwrap{margin-top:10px}
+.setbtns{display:flex;gap:6px;align-self:flex-end}
+.setbtn{font-size:.78rem;font-weight:700;color:var(--strength-col);padding:9px 10px;border:1px dashed var(--border);border-radius:8px}
 .feelwrap > span{display:block;font-size:.7rem;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
 .seg{display:flex;gap:6px}
 .seg button{flex:1 1 0;min-width:0;padding:9px 4px;border-radius:8px;border:1.5px solid var(--border);font-weight:600;font-size:.84rem;text-align:center;line-height:1.2;color:var(--dim)}
@@ -300,14 +302,14 @@ const EX = {
   mrow:{n:'Seated machine row',nt:'Chest against the pad, pull the handles to your ribs as you breathe out. Let your arms straighten slowly.',tr:true},
   brow:{n:'Seated band row',nt:'Band round your feet or a post at chest height. Pull to your stomach as you breathe out.',tr:false,per:'15 to 20'},
   slext:{n:'Leg extension, one leg at a time',nt:'Straighten the leg as you breathe out, lower slowly. Light pin only. Reps are each side.',tr:true,side:true},
-  sts:{n:'Sit to stand from a bench',nt:'Arms crossed, stand up as you breathe out, sit back down slowly. Bodyweight only.',tr:false,per:'10 to 15'},
+  sts:{n:'Sit to stand from a bench',nt:'Arms crossed, stand up as you breathe out, sit back down slowly.',tr:false,per:'10 to 15'},
   bpa:{n:'Band pull-apart',nt:'Arms straight out at chest height. Pull the band apart as you breathe out, squeezing your shoulder blades.',tr:false,per:'15 to 20'},
   rpd:{n:'Reverse pec deck',nt:'Sit facing the pad, arms out at shoulder height. Open your arms wide as you breathe out.',tr:true},
   ckb:{n:'Standing cable kickback',nt:'Ankle strap on, hold the frame, stay upright. Push the leg back as you breathe out. Reps are each side.',tr:true,side:true},
   bhe:{n:'Standing band hip extension',nt:'Band round your ankle and a post. Hold on for balance, push the leg back as you breathe out. Reps are each side.',tr:false,per:'15 each side'},
   pallof:{n:'Cable Pallof press',nt:'Stand side-on to the cable at chest height, lightest setting. Press the handle straight out from your chest as you breathe out, bring it back slowly. Reps are each side.',tr:false,per:'10 each side'},
   bpallof:{n:'Band Pallof press',nt:'Band anchored at chest height, stand side-on. Press it straight out from your chest as you breathe out, bring it back slowly. Reps are each side.',tr:false,per:'10 each side'},
-  march:{n:'Standing slow knee raise',nt:'Stand tall holding a rail. Lift one knee to hip height as you breathe out, lower slowly, then swap. Reps are each side.',tr:false,per:'10 each side'},
+  march:{n:'Standing slow knee raise',nt:'Stand tall, holding a rail or light dumbbells. Lift one knee to hip height as you breathe out, lower slowly, then swap. Reps are each side.',tr:false,per:'10 each side'},
   sacp:{n:'Single-arm cable chest press',nt:'Stand in a split stance with the cable at chest height. Press forward as you breathe out. Reps are each side.',tr:true,side:true},
   bcp:{n:'Band chest press',nt:'Band behind you at chest height. Press forward as you breathe out, return slowly.',tr:false,per:'15 to 20'},
   wpu:{n:'Wall push-up',nt:'Hands on the wall at chest height. Push away as you breathe out.',tr:false,per:'10 to 15'},
@@ -315,7 +317,7 @@ const EX = {
   bcurl:{n:'Standing band hamstring curl',nt:'Band round your ankle, hold on for balance. Curl the heel up as you breathe out. Reps are each side.',tr:false,per:'15 each side'},
   abd:{n:'Hip abduction machine',nt:'Sit tall, push your knees apart as you breathe out, return slowly.',tr:true},
   babd:{n:'Seated band abduction',nt:'Band just above your knees, sit tall. Push your knees apart as you breathe out.',tr:false,per:'15 to 20'},
-  calf:{n:'Standing calf raise',nt:'Hold a rail. Rise onto your toes as you breathe out, lower slowly. Bodyweight only.',tr:false,per:'15 to 20'},
+  calf:{n:'Standing calf raise',nt:'Hold a rail or a light dumbbell. Rise onto your toes as you breathe out, lower slowly.',tr:false,per:'15 to 20'},
   scalf:{n:'Seated calf raise machine',nt:'Light weight. Rise up as you breathe out, lower slowly to a stretch.',tr:true}
 };
 const SLOTS = {
@@ -374,9 +376,12 @@ const exOf=slot=>slot.o.includes(S.swaps[slot.id])?S.swaps[slot.id]:slot.o[0];
 const gymMins=p=>10+(p.sets===1?12:20)+p.cardio+5;
 
 /* double progression, always at 3 to 4 out of 10 */
+function setsFor(id,d,p){const L=(S.logs[id]||[]).filter(x=>x.d<d);const l=L[L.length-1];return Math.max(p.sets,l&&l.r?l.r.length:0);}
 function advice(id,d){
   const e=EX[id];
-  if(!e.tr)return{txt:e.per+', slow and controlled.',w:''};
+  if(!e.tr){const L0=(S.logs[id]||[]).filter(x=>x.d<d);const l0=L0[L0.length-1];
+    if(l0&&l0.w!=null)return{txt:e.per+', slow and controlled. Last time '+l0.w+' kg.',w:l0.w};
+    return{txt:e.per+', slow and controlled. Add a weight if you’re holding one.',w:''};}
   const L=(S.logs[id]||[]).filter(x=>x.d<d);const last=L[L.length-1];
   const each=e.side?' each side':'';
   if(!last||last.w==null)return{txt:'Pick a weight that feels 3 out of 10 for 15 reps'+each+'. If unsure, go lighter.',w:''};
@@ -476,7 +481,7 @@ function renderWeek(){
       const r=S.done[d];const wk=phase(weekNo(d));let type,badge,ti,su;
       if(s.type==='walk'){type='easy';badge='WALK';ti='Brisk walk';su=(r&&r.mins?r.mins:wk.walk)+' min, chatty pace';}
       else if(S.walkSwap[d]){type='easy';badge='WALK';ti='Walk instead of gym';su=(r&&r.mins?r.mins:wk.walk)+' min, easy pace';}
-      else{type='strength';badge='GYM '+s.which;ti='Gym session '+s.which;su=wk.sets+' set'+(wk.sets>1?'s':'')+' of 5, about '+gymMins(wk)+' min';if(!r&&S.drafts&&S.drafts[d]&&Object.values(S.drafts[d]).some(x=>x.r&&x.r.some(Boolean)))su='In progress, tap to carry on';}
+      else{type='strength';badge='GYM '+s.which;ti='Gym session '+s.which;su='5 exercises, about '+gymMins(wk)+' min';if(!r&&S.drafts&&S.drafts[d]&&Object.values(S.drafts[d]).some(x=>x.r&&x.r.some(Boolean)))su='In progress, tap to carry on';}
       h+='<div class="session-slot"><div class="session-card type-'+type+(r?' is-done':'')+'"><button class="sc-hit" data-act="open" data-arg="'+d+'"><span class="sc-badge">'+badge+'</span><span class="sc-info"><span class="sc-title">'+ti+'</span><span class="sc-sub">'+su+'</span></span></button>'+
         '<button class="completion-btn'+(r?' done':'')+'" data-act="tick" data-arg="'+d+'" aria-label="'+(r?'Mark not done':'Mark done')+'" aria-pressed="'+!!r+'">'+TICK+'</button></div></div>';
     }
@@ -504,7 +509,7 @@ function renderProgress(){
     const mx=Math.max(6,...weeks.map(w=>w.c));
     h+='<div class="prog-title">Sessions per week</div><div class="vol-chart">'+weeks.map(w=>'<div class="vol-bar-wrap"><span class="vol-val">'+w.c+'</span><div class="vol-bar" style="height:'+Math.max(4,Math.round(w.c/mx*100))+'%;background:'+PH[w.k].col+(w.m===curMon?'':';opacity:.7')+'"></div><span class="vol-wk-label">'+shortDate(w.m)+'</span></div>').join('')+'</div>';
   }
-  const rows=Object.keys(S.logs).filter(id=>EX[id]&&EX[id].tr&&S.logs[id].some(x=>x.w!=null)).map(id=>{
+  const rows=Object.keys(S.logs).filter(id=>EX[id]&&S.logs[id].some(x=>x.w!=null)).map(id=>{
     const L=S.logs[id].filter(x=>x.w!=null);const f=L[0],l=L[L.length-1];
     const fmt=x=>x.w+' kg × '+Math.max.apply(null,x.r);
     return '<tr><td><strong>'+EX[id].n+'</strong></td><td class="mono">'+fmt(f)+'</td><td class="mono"><strong>'+fmt(l)+'</strong></td></tr>';
@@ -553,17 +558,18 @@ function draw(){
     if(live)h+='<div class="breath" id="breath"><button class="bbtn" data-act="breath" aria-label="Start or stop the breathing guide"><span class="orbbox"><span class="orb"></span></span><span><span class="btxt" id="btxt">Breathing guide</span><span class="bsub" id="bsub">Tap to keep the rhythm while you lift</span></span></button></div>';
     else h+='<div class="sheet-note" style="margin-bottom:12px">Here’s what’s coming up. You’ll log it on the day.</div>';
     h+=step('w','w','Warm up','<strong>10 min</strong> easy bike or a gentle incline walk.');
-    h+=step('e','e','Strength','<strong>'+p.sets+' set'+(p.sets>1?'s':'')+' of each</strong>, effort 3 to 4 out of 10. '+(p.sets>1?'60 to 90 seconds’ rest between sets.':'Rest a minute between exercises.'));
+    h+=step('e','e','Strength','<strong>'+p.sets+' set'+(p.sets>1?'s':'')+' of each</strong> to start, effort 3 to 4 out of 10, 60 to 90 seconds’ rest between sets. Add a set with the + button.');
     SLOTS[s.which].forEach(slot=>{
       const id=exOf(slot),e=EX[id],a=advice(id,d);
       if(live&&!cur.draft[id])cur.draft[id]={w:a.w===''?'':String(a.w),r:[],f:''};
-      const dr=cur.draft[id];
+      const dr=cur.draft[id]||{r:[]};const n=dr.n||setsFor(id,d,p);
       h+='<div class="exercise-card"><div class="ex-top"><div class="ex-main"><div class="ex-name">'+e.n+'</div><div class="ex-note">'+e.nt+'</div></div>'+
-        '<div class="ex-side"><span class="ex-sets">'+p.sets+' × '+(e.tr?'15 to 20':e.per)+'</span><button class="swap" data-act="swapopen" data-arg="'+slot.id+'">Swap</button></div></div>'+
+        '<div class="ex-side"><span class="ex-sets">'+n+' × '+(e.tr?'15 to 20':e.per)+'</span><button class="swap" data-act="swapopen" data-arg="'+slot.id+'">Swap</button></div></div>'+
         '<div class="callout '+(a.hard?'amber':'green')+' tg">'+a.txt+'</div>';
       if(live){
-        h+='<div class="logs">'+(e.tr?'<label>kg<input class="kg" inputmode="decimal" data-ex="'+id+'" data-k="w" value="'+esc(dr.w)+'" placeholder="kg"></label>':'');
-        for(let i=0;i<p.sets;i++)h+='<label>Set '+(i+1)+' reps<input inputmode="numeric" data-ex="'+id+'" data-k="r" data-i="'+i+'" value="'+esc(dr.r[i]||'')+'" placeholder="reps"></label>';
+        h+='<div class="logs"><label>kg'+(e.tr?'':' (optional)')+'<input class="kg" inputmode="decimal" data-ex="'+id+'" data-k="w" value="'+esc(dr.w)+'" placeholder="kg"></label>';
+        for(let i=0;i<n;i++)h+='<label>Set '+(i+1)+' reps<input inputmode="numeric" data-ex="'+id+'" data-k="r" data-i="'+i+'" value="'+esc(dr.r[i]||'')+'" placeholder="reps"></label>';
+        h+='<div class="setbtns">'+(n<6?'<button class="setbtn" data-act="addset" data-arg="'+id+'" aria-label="Add a set">+ Set</button>':'')+(n>1?'<button class="setbtn" data-act="rmset" data-arg="'+id+'" aria-label="Remove the last set">− Set</button>':'')+'</div>';
         h+='</div><div class="feelwrap"><span>How did it feel?</span><div class="seg feel">'+
           [['easy','Easy'],['right','Just right'],['hard','Too hard']].map(o=>'<button data-act="feel" data-arg="'+id+'|'+o[0]+'" data-v="'+o[0]+'" aria-pressed="'+(dr.f===o[0])+'">'+o[1]+'</button>').join('')+'</div></div>';
       }
@@ -596,6 +602,7 @@ function keepDraft(){if(!cur||!cur.d)return;S.drafts=S.drafts||{};S.drafts[cur.d
 function flushDraft(){if(draftT){clearTimeout(draftT);draftT=null;save();}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushDraft();});
 window.addEventListener('pagehide',flushDraft);
+function redraw(){const y=sh.scrollTop;draw();sh.scrollTop=y;}
 function stopBreath(){clearTimeout(breathT);breathT=null;}
 function toggleBreath(){
   const b=document.getElementById('breath');if(!b)return;
@@ -630,6 +637,8 @@ const acts={
   undo(){const d=cur.d;delete S.done[d];if(S.drafts)delete S.drafts[d];Object.keys(S.logs).forEach(k=>{S.logs[k]=S.logs[k].filter(x=>x.d!==d);});save();toast('Marked as not done');closeSheet();},
   feel(a,btn){const[id,v]=a.split('|');cur.draft[id].f=v;keepDraft();btn.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b===btn));},
   breath(){toggleBreath();},
+  addset(id){const p=phase(weekNo(cur.d));const dr=cur.draft[id];dr.n=(dr.n||setsFor(id,cur.d,p))+1;keepDraft();redraw();},
+  rmset(id){const p=phase(weekNo(cur.d));const dr=cur.draft[id];dr.n=Math.max(1,(dr.n||setsFor(id,cur.d,p))-1);dr.r=dr.r.slice(0,dr.n);keepDraft();redraw();},
   swapopen(slot){cur.prev=cur.mode;cur.mode='swap';cur.slot=slot;draw();sh.scrollTop=0;},
   swapback(){cur.mode=cur.prev;draw();},
   swappick(id){const slot=SLOTS[cur.s.which].find(x=>x.id===cur.slot);const was=exOf(slot);const had=cur.draft&&cur.draft[was]&&cur.draft[was].r&&cur.draft[was].r.some(Boolean);if(id===slot.o[0])delete S.swaps[slot.id];else S.swaps[slot.id]=id;keepDraft();save();cur.mode=cur.prev;draw();toast(had&&id!==was?'Swapped. Your sets on '+EX[was].n+' are still saved':'Swapped to '+EX[id].n);},
@@ -637,10 +646,10 @@ const acts={
     const d=cur.d;let n=0;
     SLOTS[cur.s.which].forEach(slot=>slot.o.forEach(id=>{
       const e=EX[id],dr=cur.draft[id];if(!dr||!dr.r)return;
-      const r=dr.r.map(x=>parseInt(x,10)).filter(x=>x>0);if(!r.length)return;
-      const w=e.tr?parseFloat(String(dr.w).replace(',','.')):null;
+      const r=dr.r.slice(0,dr.n||dr.r.length).map(x=>parseInt(x,10)).filter(x=>x>0);if(!r.length)return;
+      const w=String(dr.w).trim()===''?NaN:parseFloat(String(dr.w).replace(',','.'));
       S.logs[id]=(S.logs[id]||[]).filter(x=>x.d!==d);
-      S.logs[id].push({d,w:(e.tr&&w>=0&&!isNaN(w))?w:null,r,f:dr.f||'right'});
+      S.logs[id].push({d,w:(w>=0&&!isNaN(w))?w:null,r,f:dr.f||'right'});
       S.logs[id].sort((x,y)=>x.d<y.d?-1:1);n++;
     }));
     S.done[d]={at:Date.now(),mins:0};if(S.drafts)delete S.drafts[d];clearTimeout(draftT);draftT=null;save();
